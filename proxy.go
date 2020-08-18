@@ -44,6 +44,16 @@ func Middleware(name string) proxy.Middleware {
 	}
 }
 
+func ProxyFactory(pf proxy.Factory) proxy.FactoryFunc {
+	return func(cfg *config.EndpointConfig) (proxy.Proxy, error) {
+		next, err := pf.New(cfg)
+		if err != nil {
+			return next, err
+		}
+		return Middleware("pipe-" + cfg.Endpoint)(next), nil
+	}
+}
+
 func BackendFactory(bf proxy.BackendFactory) proxy.BackendFactory {
 	return func(cfg *config.Backend) proxy.Proxy {
 		return Middleware("backend-" + cfg.URLPattern)(bf(cfg))
