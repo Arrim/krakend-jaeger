@@ -1,13 +1,14 @@
 package gin
 
 import (
+	"net/http"
+
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"net/http"
+	jaegergin "github.com/rekamarket/jaeger-gin"
 )
 
 const (
@@ -50,9 +51,8 @@ func (h *handler) HandlerFunc(c *gin.Context) {
 func (h *handler) startTrace(ctx *gin.Context) (*http.Request, opentracing.Span) {
 	r := ctx.Request
 	var span opentracing.Span
-	so := startServerSpanOption(opentracing.HTTPHeadersCarrier(r.Header))
 
-	span, c := opentracing.StartSpanFromContext(ctx, h.name, so)
+	span, c := opentracing.StartSpanFromContext(jaegergin.GetSpanFromContext(ctx), h.name)
 	span.LogKV(
 		PathAttribute, r.URL.Path,
 		HostAttribute, r.URL.Host,
@@ -60,13 +60,7 @@ func (h *handler) startTrace(ctx *gin.Context) (*http.Request, opentracing.Span)
 		UserAgentAttribute, r.UserAgent(),
 	)
 
-	ctx.Set("spanCtx", c)
+	jaegergin.InjectSpanInGinContext(c, ctx)
 
 	return r.WithContext(ctx), span
-}
-
-func startServerSpanOption(headers opentracing.TextMapReader) opentracing.StartSpanOption {
-	wireContext, _ := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, headers)
-
-	return ext.RPCServerOption(wireContext)
 }

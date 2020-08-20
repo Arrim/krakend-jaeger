@@ -3,6 +3,7 @@ package jaeger
 import (
 	"context"
 	"github.com/opentracing/opentracing-go"
+	jaegergin "github.com/rekamarket/jaeger-gin"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
@@ -20,9 +21,8 @@ func Middleware(name string) proxy.Middleware {
 		}
 		return func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
 			var span opentracing.Span
-			spanCtx := GetSpanContextFromContext(ctx)
 
-			span, ctx = opentracing.StartSpanFromContext(spanCtx, name)
+			span, ctx = opentracing.StartSpanFromContext(jaegergin.GetSpanFromContext(ctx), name)
 			resp, err := next[0](ctx, req)
 
 			if err != nil {
@@ -56,13 +56,4 @@ func BackendFactory(bf proxy.BackendFactory) proxy.BackendFactory {
 	return func(cfg *config.Backend) proxy.Proxy {
 		return Middleware("BACKEND: " + cfg.URLPattern)(bf(cfg))
 	}
-}
-
-func GetSpanContextFromContext(ctx context.Context) context.Context {
-	val := ctx.Value("spanCtx")
-	if sp, ok := val.(context.Context); ok {
-		return sp
-	}
-
-	return nil
 }
