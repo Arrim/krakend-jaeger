@@ -41,25 +41,26 @@ func HandlerFunc(cfg *config.EndpointConfig, next gin.HandlerFunc) gin.HandlerFu
 func (h *handler) HandlerFunc(c *gin.Context) {
 	var span opentracing.Span
 
-	c.Request, span = h.startTrace(c.Writer, c.Request)
+	c.Request, span = h.startTrace(c)
+	defer span.Finish()
 
-	ctx := opentracing.ContextWithSpan(c, span)
-
-	h.Handler(ctx.(*gin.Context))
-
-	span.Finish()
+	h.Handler(c)
 }
 
-func (h *handler) startTrace(_ gin.ResponseWriter, r *http.Request) (*http.Request, opentracing.Span) {
-	ctx := r.Context()
+func (h *handler) startTrace(ctx *gin.Context) (*http.Request, opentracing.Span) {
+	r := ctx.Request
 	var span opentracing.Span
 	so := startServerSpanOption(opentracing.HTTPHeadersCarrier(r.Header))
 
-	span = opentracing.StartSpan(h.name, so)
-	span.SetBaggageItem(PathAttribute, r.URL.Path)
-	span.SetBaggageItem(HostAttribute, r.URL.Host)
-	span.SetBaggageItem(MethodAttribute, r.Method)
-	span.SetBaggageItem(UserAgentAttribute, r.UserAgent())
+	span, c := opentracing.StartSpanFromContext(ctx, h.name, so)
+	span.LogKV(
+		PathAttribute, r.URL.Path,
+		HostAttribute, r.URL.Host,
+		MethodAttribute, r.Method,
+		UserAgentAttribute, r.UserAgent(),
+	)
+
+	ctx.Set("spanCtx", c)
 
 	return r.WithContext(ctx), span
 }

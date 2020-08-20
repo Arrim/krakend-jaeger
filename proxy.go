@@ -20,22 +20,20 @@ func Middleware(name string) proxy.Middleware {
 		}
 		return func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
 			var span opentracing.Span
-			span, ctx = opentracing.StartSpanFromContext(ctx, name, nil)
+			spanCtx := GetSpanContextFromContext(ctx)
+
+			span, ctx = opentracing.StartSpanFromContext(spanCtx, name)
 			resp, err := next[0](ctx, req)
 
 			if err != nil {
 				if err.Error() != errCtxCanceledMsg {
-					span.SetBaggageItem("error", err.Error())
+					span.LogKV("error", err.Error())
 				} else {
-					span.SetBaggageItem("canceled", "true")
+					span.LogKV("canceled", true)
 				}
 			}
 
-			if resp != nil && resp.IsComplete {
-				span.SetBaggageItem("complete", "true")
-			} else {
-				span.SetBaggageItem("complete", "false")
-			}
+			span.LogKV("complete", resp != nil && resp.IsComplete)
 
 			span.Finish()
 
@@ -50,12 +48,21 @@ func ProxyFactory(pf proxy.Factory) proxy.FactoryFunc {
 		if err != nil {
 			return next, err
 		}
-		return Middleware("pipe-" + cfg.Endpoint)(next), nil
+		return Middleware("PIPE: " + cfg.Endpoint)(next), nil
 	}
 }
 
 func BackendFactory(bf proxy.BackendFactory) proxy.BackendFactory {
 	return func(cfg *config.Backend) proxy.Proxy {
-		return Middleware("backend-" + cfg.URLPattern)(bf(cfg))
+		return Middleware("BACKEND: " + cfg.URLPattern)(bf(cfg))
 	}
+}
+
+func GetSpanContextFromContext(ctx context.Context) context.Context {
+	val := ctx.Value("spanCtx")
+	if sp, ok := val.(context.Context); ok {
+		return sp
+	}
+
+	return nil
 }
