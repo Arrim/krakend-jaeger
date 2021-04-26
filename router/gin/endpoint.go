@@ -3,12 +3,12 @@ package gin
 import (
 	"net/http"
 
+	jaegergin "github.com/Arrim/jaeger-gin"
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	jaegergin "github.com/rekamarket/jaeger-gin"
 )
 
 const (

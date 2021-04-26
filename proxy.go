@@ -2,8 +2,8 @@ package jaeger
 
 import (
 	"context"
+	jaegergin "github.com/Arrim/jaeger-gin"
 	"github.com/opentracing/opentracing-go"
-	jaegergin "github.com/rekamarket/jaeger-gin"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
