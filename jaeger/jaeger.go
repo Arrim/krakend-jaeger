@@ -25,13 +25,13 @@ var (
 
 type Config struct {
 	ServiceName        string                 `json:"service_name"`
-	SampleRate         int                    `json:"sample_rate"`
 	SampleType         string                 `json:"sample_type"`
 	SampleParam        float64                `json:"sample_param"`
 	LogSpans           bool                   `json:"log_spans"`
 	LocalAgentHostPort string                 `json:"local_agent_host_port"`
 	Disabled           bool                   `json:"disabled"`
 	Tags               map[string]interface{} `json:"tags"`
+	CollectorEndpoint  string                 `json:"collector_endpoint"`
 }
 
 func (c *Config) GetTags() []opentracing.Tag {
@@ -81,6 +81,7 @@ func InitJaeger(cfg *Config) (io.Closer, error) {
 		},
 		Reporter: &jaegercfg.ReporterConfig{
 			LogSpans:           cfg.LogSpans,
+			CollectorEndpoint:  cfg.CollectorEndpoint,
 			LocalAgentHostPort: cfg.LocalAgentHostPort,
 		},
 	}
