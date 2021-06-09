@@ -5,8 +5,8 @@ import (
 	jaegergin "github.com/Arrim/jaeger-gin"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/proxy"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/proxy"
 )
 
 const errCtxCanceledMsg = "context canceled"

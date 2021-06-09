@@ -5,7 +5,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"net/http"
 
-	transport "github.com/devopsfaith/krakend/transport/http/client"
+	transport "github.com/luraproject/lura/transport/http/client"
 )
 
 var defaultClient = &http.Client{}

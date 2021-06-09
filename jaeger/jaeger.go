@@ -7,7 +7,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 	"github.com/opentracing/opentracing-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
